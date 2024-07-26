@@ -24,6 +24,43 @@
 #endif
 #define _gameme_included_
 
+// mod information
+#define MOD_CSS 1
+#define MOD_DODS 2
+#define MOD_HL2MP 3
+#define MOD_TF2 4
+#define MOD_L4D 5
+#define MOD_L4DII 6
+#define MOD_INSMOD 7
+#define MOD_FF 8
+#define MOD_CSP 9
+#define MOD_ZPS 10
+#define MOD_CSGO 11
+
+/**
+ *  Spectator Info Display
+ */
+
+#define SPECTATOR_TIMER_INTERVAL    0.5
+#define SPECTATOR_NONE              0
+#define SPECTATOR_FIRSTPERSON       4
+#define SPECTATOR_3RDPERSON         5
+#define SPECTATOR_FREELOOK          6
+#define QUERY_TYPE_UNKNOWN          0
+#define QUERY_TYPE_SPECTATOR        1001
+
+/**
+ *  Hit location tracking
+ */
+
+#define HITGROUP_GENERIC   0
+#define HITGROUP_HEAD      1
+#define HITGROUP_CHEST     2
+#define HITGROUP_STOMACH   3
+#define HITGROUP_LEFTARM   4
+#define HITGROUP_RIGHTARM  5
+#define HITGROUP_LEFTLEG   6
+#define HITGROUP_RIGHTLEG  7
 
 // raw message handling
 #define RAW_MESSAGE_RANK           1
@@ -38,13 +75,34 @@
 #define RAW_MESSAGE_CALLBACK_TOP10   102
 #define RAW_MESSAGE_CALLBACK_NEXT    103
 
+/**
+ *  Team Fortress 2
+ */
+
+#define TF2_UNLOCKABLE_BIT (1<<30)
+#define TF2_WEAPON_PREFIX_LENGTH 10
+#define TF2_MAX_LOADOUT_SLOTS 8
+#define TF2_OBJ_DISPENSER 0
+#define TF2_OBJ_TELEPORTER 1
+#define TF2_OBJ_SENTRYGUN 2
+#define TF2_OBJ_SENTRYGUN_MINI 20
+#define TF2_ITEMINDEX_DEMOSHIELD 131
+#define TF2_ITEMINDEX_GUNBOATS 133
+#define TF2_JUMP_NONE 0
+#define TF2_JUMP_ROCKET_START 1
+#define TF2_JUMP_ROCKET 2
+#define TF2_JUMP_STICKY 3
+#define TF2_LUNCHBOX_CHOCOLATE 159
+#define TF2_LUNCHBOX_STEAK 311
+
+
 
 forward onGameMEStatsRank(command, client, String: message_prefix[], &Handle: datapack);
 forward onGameMEStatsPublicCommand(command, client, String: message_prefix[], &Handle: datapack);
 forward onGameMEStatsTop10(command, client, String: message_prefix[], &Handle: datapack);
 forward onGameMEStatsNext(command, client, String: message_prefix[], &Handle: datapack);
 
-typedef gameMEStatsCallback = function Action(int command, int payload, int client, Handle datapack);
+typedef gameMEStatsCallback = function Action(int command, int payload, int client, Handle &datapack);
 /**
  * Query gameME Stats data from a client
  * 
@@ -57,7 +115,7 @@ typedef gameMEStatsCallback = function Action(int command, int payload, int clie
 native QueryGameMEStats(String: request[], client, gameMEStatsCallback: callback, payload = 0);
 
 
-typedef gameMEStatsTop10Callback = function Action(int command, int payload, Handle datapack);
+typedef gameMEStatsTop10Callback = function Action(int command, int payload, Handle &datapack);
 /**
  * Query Top10 players from gameME Stats
  * 
@@ -70,7 +128,7 @@ typedef gameMEStatsTop10Callback = function Action(int command, int payload, Han
 native QueryGameMEStatsTop10(String: request[], client, gameMEStatsTop10Callback: callback, payload = 0);
 
 
-typedef gameMEStatsNextCallback = function Action(int command, int payload, int client, Handle datapack);
+typedef gameMEStatsNextCallback = function Action(int command, int payload, int client, Handle &datapack);
 /**
  * Query next players from gameME Stats for s specified client
  * 

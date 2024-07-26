@@ -18,10 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
- 
 #pragma semicolon 1
 
-#define REQUIRE_EXTENSIONS 
 #include <lang>
 #include <sourcemod>
 #include <keyvalues>
@@ -34,30 +32,15 @@
 #include <sdkhooks>
 #include <tf2_stocks>
 
-
 // plugin information
-#define GAMEME_PLUGIN_VERSION "5.0.0"
+#define GAMEME_PLUGIN_VERSION "5.0.1"
 public Plugin:myinfo = {
-	name = "gameME Plugin",
+	name = "gameME Plugin Mod",
 	author = "TTS Oetzel & Goerz GmbH",
 	description = "gameME Plugin",
 	version = GAMEME_PLUGIN_VERSION,
 	url = "http://www.gameme.com"
 };
-
-
-// mod information
-#define MOD_CSS 1
-#define MOD_DODS 2
-#define MOD_HL2MP 3
-#define MOD_TF2 4
-#define MOD_L4D 5
-#define MOD_L4DII 6
-#define MOD_INSMOD 7
-#define MOD_FF 8
-#define MOD_CSP 9
-#define MOD_ZPS 10
-#define MOD_CSGO 11
 
 new String: team_list[16][32];
 
@@ -96,19 +79,6 @@ enum struct gameme_plugin_data {
 }
 
 gameme_plugin_data gameme_plugin;
- 
-
-/**
- *  Spectator Info Display
- */
-
-#define SPECTATOR_TIMER_INTERVAL    0.5
-#define SPECTATOR_NONE              0
-#define SPECTATOR_FIRSTPERSON       4
-#define SPECTATOR_3RDPERSON         5
-#define SPECTATOR_FREELOOK          6
-#define QUERY_TYPE_UNKNOWN          0
-#define QUERY_TYPE_SPECTATOR        1001
 
 enum struct player_display_messages {
 	char smessage[255];
@@ -122,7 +92,6 @@ enum struct spectator_data {
 	float srequested;
 	int starget;
 }
-
 
 /**
  *  gameME Stats Players
@@ -144,20 +113,6 @@ enum struct gameme_player_data {
 }
 
 gameme_player_data gameme_players[MAXPLAYERS + 1];
-
-
-/**
- *  Hit location tracking
- */
-
-#define HITGROUP_GENERIC   0
-#define HITGROUP_HEAD      1
-#define HITGROUP_CHEST     2
-#define HITGROUP_STOMACH   3
-#define HITGROUP_LEFTARM   4
-#define HITGROUP_RIGHTARM  5
-#define HITGROUP_LEFTLEG   6
-#define HITGROUP_RIGHTLEG  7
 
 #define MAX_LOG_WEAPONS    64
 enum struct weapon_data {
@@ -210,7 +165,6 @@ new ColorSlotArray[] = { -1, -1, -1, -1, -1, -1 };
  *  Counter-Strike: Global Offensive
  */
 
-
 #define MAX_CSGO_CODE_MODELS 15
 new const String: csgo_code_models[15][] = {"leet", 
 	          	            	            "phoenix",
@@ -230,6 +184,7 @@ new const String: csgo_code_models[15][] = {"leet",
 	          	            	           
                                 
 #define MAX_CSGO_WEAPON_COUNT 53
+new Handle: csgo_weapon_index_mapping = INVALID_HANDLE;
 new const String: csgo_weapon_list[][] = { "ak47", "m4a1", "deagle", "awp", "p90", "bizon", "hkp2000",
 										   "glock", "nova", "galilar", "ump45", "famas", "aug", "ssg08",
 										   "p250", "mp7", "elite", "sg556", "knife", "fiveseven", "sawedoff",
@@ -269,6 +224,7 @@ new const String: css_ts_models[4][] = {"models/player/t_phoenix.mdl",
 
 
 #define MAX_CSS_WEAPON_COUNT 28
+new Handle: css_weapon_index_mapping = INVALID_HANDLE;
 new const String: css_weapon_list[][] = { "ak47", "m4a1", "awp", "deagle", "mp5navy", "aug", "p90",
                                           "famas", "galil", "scout", "g3sg1", "hegrenade", "usp",
                                           "glock", "m249", "m3", "elite", "fiveseven", "mac10",
@@ -282,6 +238,7 @@ new const String: css_weapon_list[][] = { "ak47", "m4a1", "awp", "deagle", "mp5n
  */
 
 #define MAX_DODS_WEAPON_COUNT 26
+new Handle: dods_weapon_index_mapping = INVALID_HANDLE;
 new const String: dods_weapon_list[][] = {
 									 "thompson",        // 11
 									 "m1carbine",       // 7
@@ -317,6 +274,7 @@ new const String: dods_weapon_list[][] = {
  */
  
  #define MAX_L4D_WEAPON_COUNT 23
+new Handle: l4d_weapon_index_mapping = INVALID_HANDLE;
 new const String: l4d_weapon_list[][] = { "rifle", "autoshotgun", "pumpshotgun", "smg", "dual_pistols",
                                           "pipe_bomb", "hunting_rifle", "pistol", "prop_minigun",
                                           "tank_claw", "hunter_claw", "smoker_claw", "boomer_claw",
@@ -337,6 +295,7 @@ l4dii_plugin_data l4dii_data;
  */
 
 #define MAX_HL2MP_WEAPON_COUNT 6
+new Handle: hl2mp_weapon_index_mapping = INVALID_HANDLE;
 new const String: hl2mp_weapon_list[][] = { "crossbow_bolt", "smg1", "357", "shotgun", "ar2", "pistol" }; 
 
 #define HL2MP_CROSSBOW 0
@@ -364,6 +323,7 @@ hl2mp_player hl2mp_players[MAXPLAYERS + 1];
  */
 
 #define MAX_ZPS_WEAPON_COUNT 11
+new Handle: zps_weapon_index_mapping = INVALID_HANDLE;
 new const String: zps_weapon_list[][] = { "870", "revolver", "ak47", "usp", "glock18c", "glock", "mp5", "m4", "supershorty", "winchester", "ppk"};
 
 enum struct zps_player {
@@ -378,6 +338,7 @@ zps_player zps_players[MAXPLAYERS + 1];
  */
 
 #define MAX_INSMOD_WEAPON_COUNT 88
+new Handle: insmod_weapon_index_mapping = INVALID_HANDLE;
 new const String: insmod_weapon_list[][] = { "mp443", "m1asocom16", "ppsh41", "m1014", "m1garand", "steyraug", "car15", "kar98", "sig553", "sten", "thompson",
                                              "stg44", "sr25", "spectre", "spas12", "scarl", "scar", "saiga12auto", "remingtonmsr", "pecheneg", "p90", "ots33",
                                              "nova", "mp7", "mp5a4", "mk46", "mk18_m0", "mg42", "mac10", "m60", "m500", "m4a1sopmod", "m240", "m16a1", "m107",
@@ -393,27 +354,6 @@ enum struct insmod_player {
 }
 
 insmod_player insmod_players[MAXPLAYERS + 1];
-
-
-/**
- *  Team Fortress 2
- */
-
-#define TF2_UNLOCKABLE_BIT (1<<30)
-#define TF2_WEAPON_PREFIX_LENGTH 10
-#define TF2_MAX_LOADOUT_SLOTS 8
-#define TF2_OBJ_DISPENSER 0
-#define TF2_OBJ_TELEPORTER 1
-#define TF2_OBJ_SENTRYGUN 2
-#define TF2_OBJ_SENTRYGUN_MINI 20
-#define TF2_ITEMINDEX_DEMOSHIELD 131
-#define TF2_ITEMINDEX_GUNBOATS 133
-#define TF2_JUMP_NONE 0
-#define TF2_JUMP_ROCKET_START 1
-#define TF2_JUMP_ROCKET 2
-#define TF2_JUMP_STICKY 3
-#define TF2_LUNCHBOX_CHOCOLATE 159
-#define TF2_LUNCHBOX_STEAK 311
 
 #define MAX_TF2_WEAPON_COUNT 28
 new const String: tf2_weapon_list[MAX_TF2_WEAPON_COUNT][] = {
@@ -483,17 +423,6 @@ tf2_player tf2_players[MAXPLAYERS + 1];
  *  Raw Messages Interface
  */
 
-#define RAW_MESSAGE_RANK          1
-#define RAW_MESSAGE_PLACE         2
-#define RAW_MESSAGE_KDEATH        3
-#define RAW_MESSAGE_SESSION_DATA  4
-#define RAW_MESSAGE_TOP10         5
-#define RAW_MESSAGE_NEXT          6
-
-// callbacks
-#define RAW_MESSAGE_CALLBACK_PLAYER		101
-#define RAW_MESSAGE_CALLBACK_TOP10		102
-#define RAW_MESSAGE_CALLBACK_NEXT		103
 
 // internal usage
 #define RAW_MESSAGE_CALLBACK_INT_CLOSE		1000
@@ -530,6 +459,22 @@ public OnPluginStart()
 	gameme_plugin.protobuf            = 0;
 
 	LoadTranslations("gameme.phrases");
+
+	// prepare the weapon index tables
+	csgo_weapon_index_mapping = CreateTrie();
+	prepare_weapon_indices(csgo_weapon_list, MAX_CSGO_WEAPON_COUNT, csgo_weapon_index_mapping);
+	css_weapon_index_mapping = CreateTrie();
+	prepare_weapon_indices(css_weapon_list, MAX_CSS_WEAPON_COUNT, css_weapon_index_mapping);
+	dods_weapon_index_mapping = CreateTrie();
+	prepare_weapon_indices(dods_weapon_list, MAX_DODS_WEAPON_COUNT, dods_weapon_index_mapping);
+	l4d_weapon_index_mapping = CreateTrie();
+	prepare_weapon_indices(l4d_weapon_list, MAX_L4D_WEAPON_COUNT, l4d_weapon_index_mapping);
+	hl2mp_weapon_index_mapping = CreateTrie();
+	prepare_weapon_indices(hl2mp_weapon_list, MAX_HL2MP_WEAPON_COUNT, hl2mp_weapon_index_mapping);
+	zps_weapon_index_mapping = CreateTrie();
+	prepare_weapon_indices(zps_weapon_list, MAX_ZPS_WEAPON_COUNT, zps_weapon_index_mapping);
+	insmod_weapon_index_mapping = CreateTrie();
+	prepare_weapon_indices(insmod_weapon_list, MAX_INSMOD_WEAPON_COUNT, insmod_weapon_index_mapping);
 	
 	// block origin gameME Stats command setup by default
 	gameme_plugin.blocked_commands = CreateTrie();
@@ -1104,6 +1049,7 @@ get_server_mod()
 				HookEvent("gg_final_weapon_achieved",     Event_CSGOGGWin);
 				HookEvent("gg_leader",                    Event_CSGOGGLeader);
 				HookEvent("round_mvp",                    Event_RoundMVP);
+				HookEvent("achievement_earned",		 Event_AchievementEarned);
 
 				HookEvent("bomb_dropped",		 	 gameME_Event_PlyBombDropped, EventHookMode_Pre);
 				HookEvent("player_given_c4",     	 gameME_Event_PlyBombPickup,  EventHookMode_Pre);
@@ -1121,6 +1067,7 @@ get_server_mod()
 				HookEvent("round_start",   			 Event_CSSRoundStart);
 				HookEvent("round_end",    			 Event_CSSRoundEnd);
 				HookEvent("round_mvp",               Event_RoundMVP);
+				HookEvent("achievement_earned",		 Event_AchievementEarned);
 
 				HookEvent("bomb_dropped",			 gameME_Event_PlyBombDropped, EventHookMode_Pre);
 				HookEvent("bomb_pickup",     		 gameME_Event_PlyBombPickup,  EventHookMode_Pre);
@@ -1134,6 +1081,7 @@ get_server_mod()
 				HookEvent("player_hurt",  			 Event_DODSPlayerHurt);
 				HookEvent("player_death", 			 Event_DODSPlayerDeath);
 				HookEvent("round_end", 			     Event_DODSRoundEnd);
+				HookEvent("achievement_earned",		 Event_AchievementEarned);
 			}
 			case MOD_TF2: {
 				HookEvent("player_death", 			 	Event_TF2PlayerDeath);
@@ -1148,6 +1096,7 @@ get_server_mod()
 				HookEvent("teamplay_win_panel",     	Event_TF2WinPanel);
 				HookEvent("arena_win_panel",         	Event_TF2WinPanel);
 				HookEvent("player_teleported",       	Event_TF2PlayerTeleported);
+				HookEvent("achievement_earned",		 	Event_AchievementEarned);
 
 				HookEvent("rocket_jump", 				Event_TF2RocketJump);
 				HookEvent("rocket_jump_landed", 	 	Event_TF2JumpLanded);
@@ -1176,6 +1125,7 @@ get_server_mod()
 				HookEvent("player_death", 			 Event_L4DPlayerDeath);
 				HookEvent("player_spawn", 			 Event_L4DPlayerSpawn);
 				HookEvent("round_end_message",		 Event_L4DRoundEnd, EventHookMode_PostNoCopy);
+				HookEvent("achievement_earned",		 Event_AchievementEarned);
 		
 				HookEvent("survivor_rescued",		 Event_L4DRescueSurvivor);
 				HookEvent("heal_success", 			 Event_L4DHeal);
@@ -1218,6 +1168,7 @@ get_server_mod()
 				HookEvent("player_death",            Event_ZPSPlayerDeath);
 				HookEvent("player_spawn",            Event_ZPSPlayerSpawn);
 				HookEvent("round_end",               Event_ZPSRoundEnd, EventHookMode_PostNoCopy);
+				HookEvent("achievement_earned",		 Event_AchievementEarned);
 			}
 			case MOD_CSP: {
 				HookEvent("round_start",   			 Event_CSPRoundStart);
@@ -1316,30 +1267,27 @@ public ClientConVar(QueryCookie:cookie, client, ConVarQueryResult:result, const 
 	}
 }
 
-
-get_weapon_index(const String: weapon_list[][], weapon_list_count, const String: weapon_name[])
+get_weapon_index(Handle weapon_index_map, const String: weapon_name[])
 {
-	new loop_break = 0;
-	new index = 0;
-	
-	while ((loop_break == 0) && (index < weapon_list_count)) {
-   	    if (strcmp(weapon_name, weapon_list[index], true) == 0) {
-       		loop_break++;
-		} else {
-			index++;
-		}
-	}
-
-	if (loop_break == 0) {
-		return -1;
+	new index = -1;
+	if (!GetTrieValue(weapon_index_map, weapon_name, index)) {
+		index = -1;
 	}
 	return index;
 }
 
 
+void prepare_weapon_indices(const String: weapon_list[][], weapon_list_count, Handle: weapon_index_map)
+{
+	new index = 0;
+	while (index < weapon_list_count) {
+		SetTrieValue(weapon_index_map, weapon_list[index], index);
+		index++;
+	}
+}
+
 init_tf2_weapon_trie()
 {
-
 	tf2_data.weapons_trie = CreateTrie();
 	for (new i = 0; i < MAX_TF2_WEAPON_COUNT; i++) {
 		SetTrieValue(tf2_data.weapons_trie, tf2_weapon_list[i], i);
@@ -1886,7 +1834,7 @@ public Event_CSGOPlayerFire(Handle: event, const String: name[], bool:dontBroadc
 		decl String: weapon_str[32];
 		GetEventString(event, "weapon", weapon_str, 32);
 		ReplaceString(weapon_str, 32, "weapon_", "", false);
-		new weapon_index = get_weapon_index(csgo_weapon_list, MAX_CSGO_WEAPON_COUNT, weapon_str);
+		new weapon_index = get_weapon_index(csgo_weapon_index_mapping, weapon_str);
 		if (weapon_index > -1) {
 			if ((weapon_index != 22) && // hegrenade
 			    (weapon_index != 32) && // inferno
@@ -1911,7 +1859,7 @@ public Event_CSSPlayerFire(Handle: event, const String: name[], bool:dontBroadca
 	if (userid > 0) {
 		decl String: weapon_str[32];
 		GetEventString(event, "weapon", weapon_str, 32);
-		new weapon_index = get_weapon_index(css_weapon_list, MAX_CSS_WEAPON_COUNT, weapon_str);
+		new weapon_index = get_weapon_index(css_weapon_index_mapping, weapon_str);
 		if (weapon_index > -1) {
 			if ((weapon_index != 27) && // flashbang
 			    (weapon_index != 11) && // hegrenade
@@ -2022,7 +1970,7 @@ public Event_L4DPlayerFire(Handle: event, const String: name[], bool:dontBroadca
 	if (userid > 0) {
 		decl String: weapon_str[32];
 		GetEventString(event, "weapon", weapon_str, 32);
-		new weapon_index = get_weapon_index(l4d_weapon_list, MAX_L4D_WEAPON_COUNT, weapon_str);
+		new weapon_index = get_weapon_index(l4d_weapon_index_mapping, weapon_str);
 		if (weapon_index > -1) {
 			if ((weapon_index != 12) && // entityflame
 			    (weapon_index != 6)) { // inferno
@@ -2050,7 +1998,7 @@ public Event_CSGOPlayerHurt(Handle: event, const String: name[], bool:dontBroadc
 	if ((attacker > 0) && (attacker != victim)) {
 		decl String: weapon_str[32];
 		GetEventString(event, "weapon", weapon_str, 32);
-		new weapon_index = get_weapon_index(csgo_weapon_list, MAX_CSGO_WEAPON_COUNT, weapon_str);
+		new weapon_index = get_weapon_index(csgo_weapon_index_mapping, weapon_str);
 		if (weapon_index > -1) {
 			if (player_weapons[attacker][weapon_index].wshots == 0) {
 				player_weapons[attacker][weapon_index].wshots++;
@@ -2105,7 +2053,7 @@ public Event_CSSPlayerHurt(Handle: event, const String: name[], bool:dontBroadca
 	if ((attacker > 0) && (attacker != victim)) {
 		decl String: weapon_str[32];
 		GetEventString(event, "weapon", weapon_str, 32);
-		new weapon_index = get_weapon_index(css_weapon_list, MAX_CSS_WEAPON_COUNT, weapon_str);
+		new weapon_index = get_weapon_index(css_weapon_index_mapping, weapon_str);
 		if (weapon_index > -1) {
 			if (player_weapons[attacker][weapon_index].wshots == 0) {
 				player_weapons[attacker][weapon_index].wshots++;
@@ -2158,7 +2106,7 @@ public Event_DODSPlayerHurt(Handle: event, const String: name[], bool:dontBroadc
 	if ((attacker > 0) && (attacker != victim)) {
 		decl String: weapon_str[32];
 		GetEventString(event, "weapon", weapon_str, 32);
-		new weapon_index = get_weapon_index(dods_weapon_list, MAX_DODS_WEAPON_COUNT, weapon_str);
+		new weapon_index = get_weapon_index(dods_weapon_index_mapping, weapon_str);
 		if (weapon_index > -1) {
 			if (player_weapons[attacker][weapon_index].wshots == 0) {
 				player_weapons[attacker][weapon_index].wshots++;
@@ -2216,7 +2164,7 @@ public Event_L4DPlayerHurt(Handle: event, const String: name[], bool:dontBroadca
 	if ((attacker > 0) && (attacker != victim)) {
 		decl String: weapon_str[32];
 		GetEventString(event, "weapon", weapon_str, 32);
-		new weapon_index = get_weapon_index(l4d_weapon_list, MAX_L4D_WEAPON_COUNT, weapon_str);
+		new weapon_index = get_weapon_index(l4d_weapon_index_mapping, weapon_str);
 		if (weapon_index > -1) {
 			if (player_weapons[attacker][weapon_index].wshots == 0) {
 				player_weapons[attacker][weapon_index].wshots++;
@@ -2268,7 +2216,7 @@ public Event_L4DInfectedHurt(Handle: event, const String: name[], bool:dontBroad
 	if (attacker > 0) {
 		decl String: weapon_str[32];
 		GetClientWeapon(attacker, weapon_str, 32);
-		new weapon_index = get_weapon_index(l4d_weapon_list, MAX_L4D_WEAPON_COUNT, weapon_str[7]);
+		new weapon_index = get_weapon_index(l4d_weapon_index_mapping, weapon_str[7]);
 		if (weapon_index > -1) {
 			if (player_weapons[attacker][weapon_index].wshots == 0) {
 				player_weapons[attacker][weapon_index].wshots++;
@@ -2322,7 +2270,7 @@ public Event_CSGOPlayerDeath(Handle: event, const String: name[], bool:dontBroad
 		if (attacker != victim) {
 			decl String: weapon_str[32];
 			GetEventString(event, "weapon", weapon_str, 32);
-			weapon_index = get_weapon_index(csgo_weapon_list, MAX_CSGO_WEAPON_COUNT, weapon_str);
+			weapon_index = get_weapon_index(csgo_weapon_index_mapping, weapon_str);
 			if (weapon_index > -1) {
 				player_weapons[attacker][weapon_index].wkills++;
 				new headshot = GetEventBool(event, "headshot");
@@ -2410,7 +2358,7 @@ public Event_CSSPlayerDeath(Handle: event, const String: name[], bool:dontBroadc
 		if (attacker != victim) {
 			decl String: weapon_str[32];
 			GetEventString(event, "weapon", weapon_str, 32);
-			new weapon_index = get_weapon_index(css_weapon_list, MAX_CSS_WEAPON_COUNT, weapon_str);
+			new weapon_index = get_weapon_index(css_weapon_index_mapping, weapon_str);
 			if (weapon_index > -1) {
 				player_weapons[attacker][weapon_index].wkills++;
 				new headshot = GetEventBool(event, "headshot");
@@ -2482,7 +2430,7 @@ public Event_DODSPlayerDeath(Handle: event, const String: name[], bool:dontBroad
 		if (attacker != victim) {
 			decl String: weapon_str[32];
 			GetEventString(event, "weapon", weapon_str, 32);
-			new weapon_index = get_weapon_index(dods_weapon_list, MAX_DODS_WEAPON_COUNT, weapon_str);
+			new weapon_index = get_weapon_index(dods_weapon_index_mapping, weapon_str);
 			if (weapon_index > -1) {
 				player_weapons[attacker][weapon_index].wkills++;
 				player_weapons[victim][weapon_index].wdeaths++;
@@ -2537,7 +2485,7 @@ public Event_L4DPlayerDeath(Handle: event, const String: name[], bool:dontBroadc
 		if (attacker != victim) {
 			decl String: weapon_str[32];
 			GetEventString(event, "weapon", weapon_str, 32);
-			new weapon_index = get_weapon_index(l4d_weapon_list, MAX_L4D_WEAPON_COUNT, weapon_str);
+			new weapon_index = get_weapon_index(l4d_weapon_index_mapping, weapon_str);
 			if (weapon_index > -1) {
 				player_weapons[attacker][weapon_index].wkills++;
 				new headshot = GetEventBool(event, "headshot");
@@ -2570,7 +2518,7 @@ public Event_HL2MPPlayerDeath(Handle: event, const String: name[], bool:dontBroa
 		if (attacker != victim) {
 			decl String: weapon_str[32];
 			GetEventString(event, "weapon", weapon_str, 32);
-			new weapon_index = get_weapon_index(hl2mp_weapon_list, MAX_HL2MP_WEAPON_COUNT, weapon_str);
+			new weapon_index = get_weapon_index(hl2mp_weapon_index_mapping, weapon_str);
 			if (weapon_index > -1) {
 				player_weapons[attacker][weapon_index].wkills++;		
 				player_weapons[victim][weapon_index].wdeaths++;
@@ -2598,7 +2546,7 @@ public Event_ZPSPlayerDeath(Handle: event, const String: name[], bool:dontBroadc
 		if (attacker != victim) {
 			decl String: weapon_str[32];
 			GetEventString(event, "weapon", weapon_str, 32);
-			new weapon_index = get_weapon_index(zps_weapon_list, MAX_ZPS_WEAPON_COUNT, weapon_str);
+			new weapon_index = get_weapon_index(zps_weapon_index_mapping, weapon_str);
 			if (weapon_index > -1) {
 				player_weapons[attacker][weapon_index].wkills++;		
 				player_weapons[victim][weapon_index].wdeaths++;
@@ -3036,6 +2984,13 @@ public Event_TF2PlayerTeleported(Handle: event, const String: name[], bool:dontB
 	}
 }
 
+public Event_AchievementEarned(Handle: event, const String: name[], bool:dontBroadcast)
+{
+	new player = GetClientOfUserId(GetEventInt(event, "userid"));
+	if (player > 0) {
+		log_player_event(player, "triggered", "achievement_earned");
+	}
+}
 
 public OnGameFrame()
 {
@@ -6062,7 +6017,7 @@ public OnHL2MPFireBullets(attacker, shots, String: weapon_str[])
 	if ((attacker > 0) && (attacker <= MaxClients)) {
 		decl String: weapon_name[32];
 		GetClientWeapon(attacker, weapon_name, 32);
-		new weapon_index = get_weapon_index(hl2mp_weapon_list, MAX_HL2MP_WEAPON_COUNT, weapon_name[7]);
+		new weapon_index = get_weapon_index(hl2mp_weapon_index_mapping, weapon_name[7]);
 		if (weapon_index > -1) {
 			player_weapons[attacker][weapon_index].wshots++;
 		}
@@ -6099,35 +6054,38 @@ public OnHL2MPTakeDamage(victim, attacker, inflictor, Float:damage, damagetype)
 			}
 		}
 		if (weapon_index == -1) {
-			weapon_index = get_weapon_index(hl2mp_weapon_list, MAX_HL2MP_WEAPON_COUNT, weapon_str[7]);
+			weapon_index = get_weapon_index(hl2mp_weapon_index_mapping, weapon_str[7]);
 		}
 
-		new hitgroup = ((weapon_index == HL2MP_CROSSBOW) ? hl2mp_players[victim].nextbow_hitgroup : hl2mp_players[victim].next_hitgroup);
-		if ((hitgroup >= 0) && (hitgroup < 8)) {
-			switch (hitgroup) {
-				case HITGROUP_GENERIC:
-					player_weapons[attacker][weapon_index].wgeneric++;
-				case HITGROUP_HEAD:
-					player_weapons[attacker][weapon_index].whead++;
-				case HITGROUP_CHEST:
-					player_weapons[attacker][weapon_index].wchest++;
-				case HITGROUP_STOMACH:
-					player_weapons[attacker][weapon_index].wstomach++;
-				case HITGROUP_LEFTARM:
-					player_weapons[attacker][weapon_index].wleftarm++;
-				case HITGROUP_RIGHTARM:
-					player_weapons[attacker][weapon_index].wrightarm++;
-				case HITGROUP_LEFTLEG:
-					player_weapons[attacker][weapon_index].wleftleg++;
-				case HITGROUP_RIGHTLEG:
-					player_weapons[attacker][weapon_index].wrightleg++;
-			}
-		}
-
-		new bool: headshot = ((GetClientHealth(victim) <= 0) && (hitgroup == HITGROUP_HEAD));
 		if (weapon_index > -1) {
+			new hitgroup = ((weapon_index == HL2MP_CROSSBOW) ? hl2mp_players[victim].nextbow_hitgroup : hl2mp_players[victim].next_hitgroup);
+
+			if ((hitgroup >= 0) && (hitgroup < 8)) {
+				switch (hitgroup) {
+					case HITGROUP_GENERIC:
+						player_weapons[attacker][weapon_index].wgeneric++;
+					case HITGROUP_HEAD:
+						player_weapons[attacker][weapon_index].whead++;
+					case HITGROUP_CHEST:
+						player_weapons[attacker][weapon_index].wchest++;
+					case HITGROUP_STOMACH:
+						player_weapons[attacker][weapon_index].wstomach++;
+					case HITGROUP_LEFTARM:
+						player_weapons[attacker][weapon_index].wleftarm++;
+					case HITGROUP_RIGHTARM:
+						player_weapons[attacker][weapon_index].wrightarm++;
+					case HITGROUP_LEFTLEG:
+						player_weapons[attacker][weapon_index].wleftleg++;
+					case HITGROUP_RIGHTLEG:
+						player_weapons[attacker][weapon_index].wrightleg++;
+				}
+			}
+
+		
 			player_weapons[attacker][weapon_index].whits++;
 			player_weapons[attacker][weapon_index].wdamage += RoundToNearest(damage);
+			new bool: headshot = ((GetClientHealth(victim) <= 0) && (hitgroup == HITGROUP_HEAD));
+
 			if (headshot) {
 				player_weapons[attacker][weapon_index].wheadshots++;
 			}
@@ -6148,7 +6106,7 @@ public OnZPSFireBullets(attacker, shots, String: weapon[])
 	if ((attacker > 0) && (attacker <= MaxClients)) {
 		decl String: weapon_name[32];
 		GetClientWeapon(attacker, weapon_name, 32);
-		new weapon_index = get_weapon_index(zps_weapon_list, MAX_ZPS_WEAPON_COUNT, weapon_name);
+		new weapon_index = get_weapon_index(zps_weapon_index_mapping, weapon_name);
 		if (weapon_index > -1) {
 			player_weapons[attacker][weapon_index].wshots++;
 		}
@@ -6172,7 +6130,7 @@ public OnZPSTakeDamage(victim, attacker, inflictor, Float:damage, damagetype)
 		
 		decl String: weapon_str[32];
 		GetClientWeapon(attacker, weapon_str, 32);
-		new weapon_index = get_weapon_index(zps_weapon_list, MAX_ZPS_WEAPON_COUNT, weapon_str);
+		new weapon_index = get_weapon_index(zps_weapon_index_mapping, weapon_str);
 
 		if (weapon_index > -1) {
 			player_weapons[attacker][weapon_index].whits++;
@@ -6249,7 +6207,7 @@ public Event_INSMODPlayerDeath(Handle: event, const String: name[], bool:dontBro
 			GetEventString(event, "weapon", weapon_str, 32);
 			ReplaceString(weapon_str, 32, "weapon_", "", false);
 
-			new weapon_index = get_weapon_index(insmod_weapon_list, MAX_INSMOD_WEAPON_COUNT, weapon_str);
+			new weapon_index = get_weapon_index(insmod_weapon_index_mapping, weapon_str);
 			if (weapon_index > -1) {
 				player_weapons[attacker][weapon_index].wkills++;
 				player_weapons[victim][weapon_index].wdeaths++;
@@ -6286,7 +6244,7 @@ public Event_INSMODPlayerHurt(Handle: event, const String: name[], bool:dontBroa
 		GetEventString(event, "weapon", weapon_str, 32);
 		ReplaceString(weapon_str, 32, "weapon_", "", false);
 
-		new weapon_index = get_weapon_index(insmod_weapon_list, MAX_INSMOD_WEAPON_COUNT, weapon_str);
+		new weapon_index = get_weapon_index(insmod_weapon_index_mapping, weapon_str);
 		if (weapon_index > -1) {
 			player_weapons[attacker][weapon_index].wshots++;
 			player_weapons[attacker][weapon_index].whits++;
@@ -6335,7 +6293,7 @@ public Event_INSMODEventFired(Handle:event, const String:name[], bool:dontBroadc
 	GetClientWeapon(client, weapon_str, 32);
 	ReplaceString(weapon_str, 32, "weapon_", "", false);
 
-	new weapon_index = get_weapon_index(insmod_weapon_list, MAX_INSMOD_WEAPON_COUNT, weapon_str);
+	new weapon_index = get_weapon_index(insmod_weapon_index_mapping, weapon_str);
 	if (weapon_index > -1) {
 		player_weapons[client][weapon_index].wshots++;
 	}

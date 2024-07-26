@@ -32,7 +32,7 @@
 // plugin information
 #define GAMEME_MESSAGES_PLUGIN_VERSION "1.3"
 public Plugin:myinfo = {
-	name = "gameME Raw Message Plugin",
+	name = "gameME Raw Message Plugin Mod by 这不是 Hack 而是技能",
 	author = "TTS Oetzel & Goerz GmbH",
 	description = "gameME Plugin",
 	version = GAMEME_MESSAGES_PLUGIN_VERSION,
